@@ -41,7 +41,8 @@ temporal operator nexus endpoint create --name order-payments --target-namespace
         Console.WriteLine("Running workers");
 
         // Start an order workflow
-        var meijerOrderId = Guid.NewGuid().ToString();
+        var random = new Random();
+        var meijerOrderId = $"meijer-{random.Next(10000, 100000)}";
         // payment
         await paymentsClient.StartWorkflowAsync(
             (ProcessPaymentWorkflow wf) => wf.RunAsync(),
