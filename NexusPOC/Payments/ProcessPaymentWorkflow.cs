@@ -60,10 +60,8 @@ namespace NexusPOC.Payments
             }
             _orderCreate.ReleaseMutex();
 
-            await Workflow.WhenAnyAsync(
-                Workflow.WaitConditionAsync(() => _authorization is not null),
-                Workflow.DelayAsync(TimeSpan.FromMinutes(5))
-            );
+            await Workflow.WaitConditionAsync(() => _authorization is not null);
+
             return new PaymentDecision(_authorization is not null);
         }
     }
