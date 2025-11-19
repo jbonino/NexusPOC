@@ -18,19 +18,19 @@ namespace NexusPOC.Payments.Nexus
         /// </summary>
         /// <returns>The order creation response with authorization details.</returns>
         [NexusOperation]
-        CreateOrderResponse CreateOrder(CreateOrderRequest createOrderRequest);
+        PaymentDecision CreateOrder(CreateOrderRequest createOrderRequest);
     }
 
     [NexusServiceHandler(typeof(IPaymentsService))]
     public class PaymentService
     {
         [NexusOperationHandler]
-        public static IOperationHandler<CreateOrderRequest, CreateOrderResponse> CreateOrder()
+        public static IOperationHandler<CreateOrderRequest, PaymentDecision> CreateOrder()
         {
             return WorkflowRunOperationHandler.FromHandleFactory((WorkflowRunOperationContext context, CreateOrderRequest request) =>
             {
                 return context.StartWorkflowAsync(
-                    (CreateOrderProxyWorkflow wf) => wf.RunAsync(request),
+                    (UpdateProcessPaymentWorkflow wf) => wf.RunAsync(request),
                     new()
                     {
                         Id = $"create-order-{context.HandlerContext.RequestId}",

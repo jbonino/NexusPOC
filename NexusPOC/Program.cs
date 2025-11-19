@@ -10,6 +10,7 @@ static class Program
 {
     /* CMDS
 temporal server start-dev
+
 temporal operator namespace create --namespace payments
 temporal operator namespace create --namespace orders
 temporal operator nexus endpoint create --name order-payments --target-namespace payments --target-task-queue payments
@@ -26,9 +27,9 @@ temporal operator nexus endpoint create --name order-payments --target-namespace
             paymentsClient,
             new TemporalWorkerOptions(taskQueue: "payments")
                 .AddWorkflow<ProcessPaymentWorkflow>()
-                .AddWorkflow<CreateOrderProxyWorkflow>()
+                .AddWorkflow<UpdateProcessPaymentWorkflow>()
                 .AddAllActivities(new PaymentActivities())
-                .AddAllActivities(new ProxyActivities(paymentsClient))
+                .AddAllActivities(new UpdateProcessPaymentActivities(paymentsClient))
                 .AddNexusService(new PaymentService())
         );
         using var ordersWorker = new TemporalWorker(

@@ -11,8 +11,8 @@ namespace NexusPOC.Payments
         string MeijerOrderId,
         decimal Amount
     );
-    public record CreateOrderResponse(
-        PaymentTransaction Authorization
+    public record PaymentDecision(
+        bool IsSuccess
     );
     public record PaymentTransaction(
         string OrderId,
@@ -26,9 +26,9 @@ namespace NexusPOC.Payments
     [Workflow]
     public class ProcessPaymentWorkflow
     {
-        private CreateOrderRequest _createOrderRequest;
-        private PaymentTransaction _authorization;
-
+        private CreateOrderRequest? _createOrderRequest;
+        private PaymentTransaction? _authorization;
+        private readonly Temporalio.Workflows.Mutex _orderCreate = new();
         [WorkflowRun]
         public async Task<Dictionary<string, object>> RunAsync()
         {
@@ -37,7 +37,7 @@ namespace NexusPOC.Payments
             await Workflow.WaitConditionAsync(() => _createOrderRequest is not null);
 
             _authorization = await Workflow.ExecuteActivityAsync(
-                (PaymentActivities a) => a.AuthorizeAsync(_createOrderRequest.MeijerOrderId, _createOrderRequest.Amount),
+                (PaymentActivities a) => a.AuthorizeAsync(_createOrderRequest!.MeijerOrderId, _createOrderRequest.Amount),
                 new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
 
 
@@ -49,15 +49,22 @@ namespace NexusPOC.Payments
         }
 
         [WorkflowUpdate]
-        public async Task<CreateOrderResponse> CreateOrder(CreateOrderRequest request)
+        public async Task<PaymentDecision?> CreateOrder(CreateOrderRequest request)
         {
             Console.WriteLine("ProcessPaymentWorkflow.CreateOrder...");
+
+            await _orderCreate.WaitOneAsync();
             if (_createOrderRequest is null)
             {
                 _createOrderRequest = request;
             }
-            await Workflow.WaitConditionAsync(() => _authorization is not null);
-            return new CreateOrderResponse(_authorization);
+            _orderCreate.ReleaseMutex();
+
+            await Workflow.WhenAnyAsync(
+                Workflow.WaitConditionAsync(() => _authorization is not null),
+                Workflow.DelayAsync(TimeSpan.FromMinutes(5))
+            );
+            return new PaymentDecision(_authorization is not null);
         }
     }
 }
