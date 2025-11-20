@@ -1,4 +1,5 @@
-﻿using Temporalio.Workflows;
+﻿using Temporalio.Exceptions;
+using Temporalio.Workflows;
 
 namespace NexusPOC.Payments
 {
@@ -28,7 +29,7 @@ namespace NexusPOC.Payments
     {
         private CreateOrderRequest? _createOrderRequest;
         private PaymentTransaction? _authorization;
-        private readonly Temporalio.Workflows.Mutex _orderCreate = new();
+
         [WorkflowRun]
         public async Task<Dictionary<string, object>> RunAsync()
         {
@@ -48,17 +49,19 @@ namespace NexusPOC.Payments
             };
         }
 
+        [WorkflowUpdateValidator(nameof(CreateOrder))]
+        public void ValidateCreateOrderRequest(CreateOrderRequest request)
+        {
+            if (_createOrderRequest is not null)
+            {
+                throw new ApplicationFailureException("Already accepted a create order request");
+            }
+        }
         [WorkflowUpdate]
         public async Task<PaymentDecision?> CreateOrder(CreateOrderRequest request)
         {
             Console.WriteLine("ProcessPaymentWorkflow.CreateOrder...");
-
-            await _orderCreate.WaitOneAsync();
-            if (_createOrderRequest is null)
-            {
-                _createOrderRequest = request;
-            }
-            _orderCreate.ReleaseMutex();
+            _createOrderRequest = request;
 
             await Workflow.WaitConditionAsync(() => _authorization is not null);
 
