@@ -25,12 +25,12 @@ namespace NexusPOC.Payments.Nexus
     public class PaymentService
     {
         [NexusOperationHandler]
-        public static IOperationHandler<CreateOrderRequest, PaymentDecision> CreateOrder()
+        public static IOperationHandler<CreateOrderRequest, PaymentDecision?> CreateOrder()
         {
             return WorkflowRunOperationHandler.FromHandleFactory((WorkflowRunOperationContext context, CreateOrderRequest request) =>
             {
                 return context.StartWorkflowAsync(
-                    (UpdateProcessPaymentWorkflow wf) => wf.RunAsync(request),
+                    (CreateOrderUpdateWorkflow wf) => wf.RunAsync(request),
                     new()
                     {
                         Id = $"create-order-{context.HandlerContext.RequestId}",

@@ -3,7 +3,7 @@
 namespace NexusPOC.Payments.Nexus
 {
     [Workflow]
-    public class UpdateProcessPaymentWorkflow
+    public class CreateOrderUpdateWorkflow
     {
         [WorkflowRun]
         public Task<PaymentDecision?> RunAsync(CreateOrderRequest? createOrderRequest)
@@ -15,7 +15,8 @@ namespace NexusPOC.Payments.Nexus
                     new ActivityOptions
                     {
                         RetryPolicy = new() { MaximumAttempts = 1 },
-                        StartToCloseTimeout = TimeSpan.FromMinutes(5)
+                        StartToCloseTimeout = TimeSpan.FromMinutes(5),
+                        CancellationToken = Workflow.CancellationToken,
                     });
             }
 

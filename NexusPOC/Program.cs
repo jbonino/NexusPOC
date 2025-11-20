@@ -27,7 +27,7 @@ temporal operator nexus endpoint create --name order-payments --target-namespace
             paymentsClient,
             new TemporalWorkerOptions(taskQueue: "payments")
                 .AddWorkflow<ProcessPaymentWorkflow>()
-                .AddWorkflow<UpdateProcessPaymentWorkflow>()
+                .AddWorkflow<CreateOrderUpdateWorkflow>()
                 .AddAllActivities(new PaymentActivities())
                 .AddAllActivities(new UpdateProcessPaymentActivities(paymentsClient))
                 .AddNexusService(new PaymentService())
