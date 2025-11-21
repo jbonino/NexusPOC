@@ -49,10 +49,18 @@ temporal operator nexus endpoint create --name order-payments --target-namespace
             (ProcessPaymentWorkflow wf) => wf.RunAsync(),
             new(id: meijerOrderId, taskQueue: "payments"));
         // order
-        var result = await ordersClient.ExecuteWorkflowAsync(
+        try
+        {
+            var result = await ordersClient.ExecuteWorkflowAsync(
             (ProcessOrderWorkflow wf) => wf.RunAsync(meijerOrderId),
             new(id: meijerOrderId, taskQueue: "orders"));
-        Console.WriteLine(result.ToString());
+            Console.WriteLine($"Order workflow completed with payment decision: {result}");
+        }
+        catch (Exception ex)
+        {
+            Console.Write(ex);
+        }
+
         Console.ReadKey();
     }
 

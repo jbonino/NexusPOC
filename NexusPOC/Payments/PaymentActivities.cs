@@ -9,7 +9,7 @@ namespace NexusPOC.Payments
         {
             Console.WriteLine($"Authorizing card for order {orderId}...");
 
-            var delay = TimeSpan.FromSeconds(15);
+            var delay = TimeSpan.FromSeconds(5);
             Console.WriteLine($"Task.Delay({delay}) to simulate authorization");
             await Task.Delay(delay);
 

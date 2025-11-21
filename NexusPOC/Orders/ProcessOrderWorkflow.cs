@@ -12,10 +12,11 @@ namespace NexusPOC.Orders
         {
             Console.WriteLine("ProcessOrderWorkflow.RunAsync...");
             var paymentService = Workflow.CreateNexusClient<IPaymentsService>(IPaymentsService.EndpointName);
-            var authAmount = 100m;
 
+            var timeout = TimeSpan.FromSeconds(60);
+            var createOrderPaymentRequest = new CreateOrderRequest(meijerOrderId, 100m, timeout);
             var paymentDecision = await paymentService
-                .ExecuteNexusOperationAsync(s => s.CreateOrder(new CreateOrderRequest(meijerOrderId, authAmount)));
+                .ExecuteNexusOperationAsync(s => s.CreateOrder(createOrderPaymentRequest));
 
             return paymentDecision;
         }

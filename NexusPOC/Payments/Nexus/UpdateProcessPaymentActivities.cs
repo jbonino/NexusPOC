@@ -13,10 +13,10 @@ namespace NexusPOC.Payments.Nexus
         }
 
         [Activity]
-        public async Task<PaymentDecision?> CreateOrderUpdate(CreateOrderRequest request)
+        public Task<PaymentDecision?> CreateOrder(CreateOrderRequest request)
         {
             var handle = _client.GetWorkflowHandle<ProcessPaymentWorkflow>(request.MeijerOrderId);
-            return await handle.ExecuteUpdateAsync(wf => wf.CreateOrder(request));
+            return handle.ExecuteUpdateAsync(wf => wf.CreateOrder(request));
         }
     }
 }
