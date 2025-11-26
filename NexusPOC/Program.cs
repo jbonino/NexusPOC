@@ -9,11 +9,11 @@ namespace NexusPOC;
 static class Program
 {
     /* CMDS
-.\temporal.exe server start-dev
+temporal server start-dev
 
-.\temporal.exe operator namespace create --namespace payments
-.\temporal.exe operator namespace create --namespace orders
-.\temporal.exe operator nexus endpoint create --name payments-service --target-namespace payments --target-task-queue payments
+temporal operator namespace create --namespace payments
+temporal operator namespace create --namespace orders
+temporal operator nexus endpoint create --name payments-service --target-namespace payments --target-task-queue payments
      */
 
     static async Task Main()
