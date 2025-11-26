@@ -18,5 +18,19 @@ namespace NexusPOC.Payments.Nexus
             var handle = _client.GetWorkflowHandle<ProcessPaymentWorkflow>(request.MeijerOrderId);
             return handle.ExecuteUpdateAsync(wf => wf.CreateOrder(request));
         }
+
+        [Activity]
+        public Task<PaymentDecision?> FinalizeOrder(FinalizeOrderRequest request)
+        {
+            var handle = _client.GetWorkflowHandle<ProcessPaymentWorkflow>(request.MeijerOrderId);
+            return handle.ExecuteUpdateAsync(wf => wf.FinalizeOrder(request));
+        }
+
+        [Activity]
+        public Task<bool> SetFulfillmentStatus(SetFulfillmentStatus request)
+        {
+            var handle = _client.GetWorkflowHandle<ProcessPaymentWorkflow>(request.MeijerOrderId);
+            return handle.ExecuteUpdateAsync(wf => wf.SetFulfillmentStatus(request));
+        }
     }
 }

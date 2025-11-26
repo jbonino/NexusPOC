@@ -9,11 +9,11 @@ namespace NexusPOC;
 static class Program
 {
     /* CMDS
-temporal server start-dev
+.\temporal.exe server start-dev
 
-temporal operator namespace create --namespace payments
-temporal operator namespace create --namespace orders
-temporal operator nexus endpoint create --name order-payments --target-namespace payments --target-task-queue payments
+.\temporal.exe operator namespace create --namespace payments
+.\temporal.exe operator namespace create --namespace orders
+.\temporal.exe operator nexus endpoint create --name payments-service --target-namespace payments --target-task-queue payments
      */
 
     static async Task Main()
@@ -28,6 +28,8 @@ temporal operator nexus endpoint create --name order-payments --target-namespace
             new TemporalWorkerOptions(taskQueue: "payments")
                 .AddWorkflow<ProcessPaymentWorkflow>()
                 .AddWorkflow<CreateOrderUpdateWorkflow>()
+                .AddWorkflow<FinalizeOrderUpdateWorkflow>()
+                .AddWorkflow<SetFulfillmentStatusUpdateWorkflow>()
                 .AddAllActivities(new PaymentActivities())
                 .AddAllActivities(new UpdateProcessPaymentActivities(paymentsClient))
                 .AddNexusService(new PaymentService())
@@ -51,10 +53,12 @@ temporal operator nexus endpoint create --name order-payments --target-namespace
         // order
         try
         {
-            var result = await ordersClient.ExecuteWorkflowAsync(
-            (ProcessOrderWorkflow wf) => wf.RunAsync(meijerOrderId),
-            new(id: meijerOrderId, taskQueue: "orders"));
-            Console.WriteLine($"Order workflow completed with payment decision: {result}");
+            var result = await ordersClient.ExecuteWorkflowAsync
+            (
+                (ProcessOrderWorkflow wf) => wf.RunAsync(meijerOrderId),
+                new(id: meijerOrderId, taskQueue: "orders")
+            );
+            Console.WriteLine($"Finished with result: {result}");
         }
         catch (Exception ex)
         {

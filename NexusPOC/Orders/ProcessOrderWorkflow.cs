@@ -8,17 +8,52 @@ namespace NexusPOC.Orders
     public class ProcessOrderWorkflow
     {
         [WorkflowRun]
-        public async Task<PaymentDecision> RunAsync(string meijerOrderId)
+        public async Task<bool> RunAsync(string meijerOrderId)
         {
             Console.WriteLine("ProcessOrderWorkflow.RunAsync...");
             var paymentService = Workflow.CreateNexusClient<IPaymentsService>(IPaymentsService.EndpointName);
 
             var timeout = TimeSpan.FromSeconds(60);
-            var createOrderPaymentRequest = new CreateOrderRequest(meijerOrderId, 100m, timeout);
-            var paymentDecision = await paymentService
-                .ExecuteNexusOperationAsync(s => s.CreateOrder(createOrderPaymentRequest));
+            var authDecision = await paymentService
+                .ExecuteNexusOperationAsync(s => s.CreateOrder(new CreateOrderRequest
+                (
+                    meijerOrderId, 
+                    100m, 
+                    timeout
+                )));
 
-            return paymentDecision;
+            if (!authDecision.IsSuccess)
+            {
+                Console.WriteLine($"Authorization is not approved: {authDecision}");
+                return false;
+            }
+
+            await Workflow.DelayAsync(TimeSpan.FromSeconds(1));
+
+            var captureDecision = await paymentService
+                .ExecuteNexusOperationAsync(s => s.FinalizeOrder(new FinalizeOrderRequest
+                (
+                    meijerOrderId, 
+                    100m, 
+                    timeout))
+                );
+            if (!captureDecision.IsSuccess)
+            {
+                Console.WriteLine($"Capture is not approved: {captureDecision}");
+                return false;
+            }
+
+            await Workflow.DelayAsync(TimeSpan.FromSeconds(1));
+
+            await paymentService
+                .ExecuteNexusOperationAsync(s => s.SetFulfillmentStatus(new SetFulfillmentStatus
+                (
+                    meijerOrderId,
+                    true,
+                    timeout
+                )));
+
+            return true;
         }
     }
 }
